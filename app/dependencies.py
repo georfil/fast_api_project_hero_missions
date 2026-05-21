@@ -1,11 +1,10 @@
 from fastapi import Depends, HTTPException, status
 from typing import Annotated
-from db import SessionDep
-from security import oauth_scheme, SECRET_KEY, ALGORITHM
-from models import User
+from .db import SessionDep
+from .security import oauth_scheme, SECRET_KEY, ALGORITHM
+from .models import User
 from jose import jwt, JWTError
 from sqlmodel import select
-from functools import partial
 
 def get_current_user(
         token: Annotated[str, Depends(oauth_scheme)],

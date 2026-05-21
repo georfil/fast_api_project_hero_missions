@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from routers import auth, heroes, missions # Import routers
-from db import lifespan
+from .routers import auth, heroes, missions
+from .db import lifespan
 
 app = FastAPI(
     title="Secure Hero Missions",
