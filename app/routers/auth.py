@@ -11,7 +11,7 @@ from ..security import create_jwt_token
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register")
-def register_user(data: UserRegister, session: SessionDep ):
+def register_user(data: UserRegister, session: SessionDep) -> User:
     """Register a new user.
 
     Args:
@@ -51,7 +51,7 @@ def register_user(data: UserRegister, session: SessionDep ):
     return user
 
 @router.post("/login")
-def login(form: Annotated[OAuth2PasswordRequestForm, Depends()] ,session: SessionDep):
+def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], session: SessionDep) -> dict[str, str]:
     """Authenticate a user and return a JWT access token.
 
     Args:
@@ -80,7 +80,7 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()] ,session: Sessio
     }
 
 @router.get("/me")
-def me(user: CurrentUser):
+def me(user: CurrentUser) -> dict[str, str | bool]:
     """Return the currently authenticated user's profile.
 
     Args:

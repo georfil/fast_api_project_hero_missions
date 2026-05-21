@@ -1,26 +1,30 @@
+from collections.abc import Sequence
 from fastapi import APIRouter, HTTPException, status
-from ..dependencies import CurrentUser, AdminUser
+from ..dependencies import CurrentUser, AdminUser, Pagination
 from ..models import Mission, MissionCreate, MissionUpdate, Hero
 from ..db import SessionDep
 from sqlmodel import select
 
 router = APIRouter(prefix="/missions", tags=["Missions"])
 
-@router.get("")
-def get_missions(session:SessionDep): #Add pagination later
-    """Retrieve all missions.
+
+@router.get("", summary="List missions", description="Returns a paginated list of all missions.")
+def get_missions(pagination: Pagination, session: SessionDep) -> Sequence[Mission]:
+    """Retrieve a paginated list of missions.
 
     Args:
+        pagination: Page number and page size query parameters.
         session: The database session dependency.
 
     Returns:
-        A list of all Mission objects.
+        A list of Mission objects for the requested page.
     """
-    return session.exec(select(Mission)).all()
+    offset = pagination.page * pagination.size
+    return session.exec(select(Mission).limit(pagination.size).offset(offset)).all()
 
 
-@router.get("/{mission_id}")
-def get_mission(mission_id: int, session:SessionDep):
+@router.get("/{mission_id}", summary="Get mission", description="Returns a single mission by ID.")
+def get_mission(mission_id: int, session:SessionDep) -> Mission:
     """Retrieve a single mission by ID.
 
     Args:
@@ -33,7 +37,6 @@ def get_mission(mission_id: int, session:SessionDep):
     Raises:
         HTTPException: 404 if no mission exists with the given ID.
     """
-
     mission = session.get(Mission, mission_id)
 
     if not mission:
@@ -41,17 +44,17 @@ def get_mission(mission_id: int, session:SessionDep):
             status_code=404,
             detail=f"No mission was found with this id: {mission_id}"
         )
-    
+
     return mission
 
-@router.patch("/{mission_id}")
-def update_mission(mission_id: int, data: MissionUpdate, user: CurrentUser, session: SessionDep):
+
+@router.patch("/{mission_id}", summary="Update mission", description="Partially updates a mission. Only provided fields are applied.")
+def update_mission(mission_id: int, data: MissionUpdate, _: CurrentUser, session: SessionDep) -> Mission:
     """Partially update a mission by ID.
 
     Args:
         mission_id: The unique integer ID of the mission to update.
         data: Fields to update; only provided fields are applied.
-        user: The authenticated user making the request.
         session: The database session dependency.
 
     Returns:
@@ -60,7 +63,6 @@ def update_mission(mission_id: int, data: MissionUpdate, user: CurrentUser, sess
     Raises:
         HTTPException: 404 if no mission exists with the given ID.
     """
-
     # Fetch the mission based on the id
     mission = session.get(Mission, mission_id)
 
@@ -70,12 +72,12 @@ def update_mission(mission_id: int, data: MissionUpdate, user: CurrentUser, sess
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No mission was found with this id: {mission_id}"
         )
-    
-    #For the provided value only, update the hero
+
+    #For the provided value only, update the mission
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(mission, field, value)
 
-    #Update the db with the new hero
+    #Update the db with the new mission
     session.add(mission)
     session.commit()
     session.refresh(mission)
@@ -83,13 +85,12 @@ def update_mission(mission_id: int, data: MissionUpdate, user: CurrentUser, sess
     return mission
 
 
-@router.post("")
-def create_mission(data: MissionCreate, user: CurrentUser, session: SessionDep):
+@router.post("", summary="Create mission", description="Creates a new mission assigned to an existing hero. Requires authentication.")
+def create_mission(data: MissionCreate, _: CurrentUser, session: SessionDep) -> Mission:
     """Create a new mission.
 
     Args:
         data: The fields required to create the mission.
-        user: The authenticated user making the request.
         session: The database session dependency.
 
     Returns:
@@ -107,7 +108,7 @@ def create_mission(data: MissionCreate, user: CurrentUser, session: SessionDep):
     if not hero:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail= f"Hero with id = {hero_id} doesn't exist. Can't create mission"
+            detail=f"Hero with id = {hero_id} doesn't exist. Can't create mission"
         )
 
     # Update DB
@@ -118,13 +119,12 @@ def create_mission(data: MissionCreate, user: CurrentUser, session: SessionDep):
     return mission
 
 
-@router.delete("/{mission_id}")
-def delete_mission(mission_id: int,  user: AdminUser, session: SessionDep):
+@router.delete("/{mission_id}", summary="Delete mission", description="Deletes a mission by ID. Requires admin.")
+def delete_mission(mission_id: int, _: AdminUser, session: SessionDep) -> Mission:
     """Delete a mission by ID.
 
     Args:
         mission_id: The unique integer ID of the mission to delete.
-        user: The authenticated admin user making the request.
         session: The database session dependency.
 
     Returns:
@@ -133,17 +133,17 @@ def delete_mission(mission_id: int,  user: AdminUser, session: SessionDep):
     Raises:
         HTTPException: 404 if no mission exists with the given ID.
     """
-    # Fetch the hero based on the id
+    # Fetch the mission based on the id
     mission = session.get(Mission, mission_id)
 
-    #Check if it found heroes with this id
+    #Check if it found missions with this id
     if not mission:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No mission was found with this id: {mission_id}"
         )
 
-    #Update the db with the new hero
+    #Update the db
     session.delete(mission)
     session.commit()
 

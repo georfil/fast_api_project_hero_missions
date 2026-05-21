@@ -58,6 +58,8 @@ fast_api_project_hero_missions/
 
 ### Prerequisites
 
+- Python 3.12+
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -127,8 +129,10 @@ pytest -v     # verbose
 
 ## 5. Swagger UI
 
-<!-- TODO: Replace this placeholder with a screenshot of the Swagger UI -->
-> **Screenshot coming soon.** Start the server and open `http://127.0.0.1:8000/docs`.
+![Swagger UI](images/image.png)
+![Swagger UI](images/image1.png)
+![Swagger UI](images/image2.png)
+![Swagger UI](images/image3.png)
 
 ---
 
@@ -141,11 +145,10 @@ pytest -v     # verbose
 - **Role-based access control** — authentication logic is centralised in reusable dependencies, keeping route handlers clean.
 - **Comprehensive test suite** — 27 tests covering happy paths and error cases, running against an isolated in-memory database.
 - **Zero-setup database** — tables are created automatically on startup, no migration step needed.
+- **Pagination** — list endpoints support `page` / `size` query parameters to handle large datasets efficiently.
 
 ### Future Improvements
 
 - **Environment-based secrets** — the JWT secret key should move to an environment variable for production readiness.
-- **Pagination** — list endpoints currently return the full table; `offset` / `limit` query parameters would prevent issues at scale.
-- **Refresh tokens** — adding a refresh flow would improve usability without sacrificing the short access-token expiry.
-- **Async database sessions** — switching to `AsyncSession` would let FastAPI fully leverage its async runtime under load.
+- **Schema-Model Seperation** — as endpoints expaned `models.py` must be split into a schema folder and models folder
 - **Password strength validation** — enforcing minimum length and complexity at registration would improve security.

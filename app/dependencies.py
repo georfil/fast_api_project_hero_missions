@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException, status
+from pydantic import BaseModel, Field
 from typing import Annotated
 from .db import SessionDep
 from .security import oauth_scheme, SECRET_KEY, ALGORITHM
@@ -66,5 +67,13 @@ def get_current_admin(user: CurrentUser) -> User:
         )
     return user
 
-#Alias for Adnin Dependency
+#Alias for Admin Dependency
 AdminUser = Annotated[User, Depends(get_current_admin)]
+
+
+class PaginationParams(BaseModel):
+    page: int = Field(ge=0, default=0)
+    size: int = Field(ge=0, le=10, default=10)
+
+#Alias for Pagination Dependency
+Pagination = Annotated[PaginationParams, Depends(PaginationParams)]
