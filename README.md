@@ -152,3 +152,4 @@ pytest -v     # verbose
 - **Environment-based secrets** — the JWT secret key should move to an environment variable for production readiness.
 - **Schema-Model Seperation** — as endpoints expaned `models.py` must be split into a schema folder and models folder
 - **Password strength validation** — enforcing minimum length and complexity at registration would improve security.
+- **Database migrations** — integrating Alembic would enable versioned, incremental schema migrations instead of recreating tables on startup.
